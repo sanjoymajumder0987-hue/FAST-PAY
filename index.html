@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FAST PAY - Premium Digital Wallet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+<style>
+:root {
+  --p1: #6C3BFF;
+  --p2: #4A90FF;
+  --p3: #00D4FF;
+  --p4: #A855F7;
+  --grad: linear-gradient(135deg, #6C3BFF 0%, #4A90FF 50%, #00D4FF 100%);
+  --grad2: linear-gradient(135deg, #A855F7 0%, #6C3BFF 100%);
+  --grad3: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --glass: rgba(255,255,255,0.08);
+  --glass2: rgba(255,255,255,0.15);
+  --border: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --text2: rgba(255,255,255,0.65);
+  --text3: rgba(255,255,255,0.4);
+  --bg: #0a0a1a;
+  --card: rgba(255,255,255,0.06);
+  --card2: rgba(108,59,255,0.15);
+  --success: #00E676;
+  --error: #FF5252;
+  --warn: #FFD740;
+  --radius: 20px;
+  --radius2: 14px;
+  --shadow: 0 8px 32px rgba(108,59,255,0.25);
+  --shadow2: 0 4px 16px rgba(0,0,0,0.4);
+  --font: 'Sora', sans-serif;
+  --mono: 'Space Mono', monospace;
+  --transition: 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="light"] {
+  --bg: #f0f2ff;
+  --card: rgba(255,255,255,0.85);
+  --card2: rgba(108,59,255,0.08);
+  --glass: rgba(255,255,255,0.7);
+  --glass2: rgba(255,255,255,0.9);
+  --border: rgba(108,59,255,0.15);
+  --text: #1a1a2e;
+  --text2: rgba(26,26,46,0.7);
+  --text3: rgba(26,26,46,0.45);
+  --shadow: 0 8px 32px rgba(108,59,255,0.18);
+  --shadow2: 0 4px 16px rgba(0,0,0,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:var(--font);background:var(--bg);color:var(--text);transition:background var(--transition),color var(--transition);}
+button{cursor:pointer;border:none;outline:none;font-family:var(--font);}
+input{outline:none;font-family:var(--font);}
+a{text-decoration:none;color:inherit;}
+.page{position:fixed;inset:0;display:flex;flex-direction:column;transition:opacity 0.4s ease,transform 0.4s ease;pointer-events:none;opacity:0;transform:translateY(20px);z-index:10;overflow:hidden;}
+.page.active{opacity:1;transform:translateY(0);pointer-events:all;z-index:20;}
+.page.slide-left{transform:translateX(-100%);}
+.page.slide-right{transform:translateX(100%);}
+
+/* ===== LOADING SCREEN ===== */
+#loadingScreen{background:var(--grad3);z-index:9999;justify-content:center;align-items:center;flex-direction:column;gap:32px;opacity:1;transform:none;pointer-events:all;}
+.logo-container{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.logo-icon{width:80px;height:80px;animation:logoFloat 2s ease-in-out infinite;}
+.logo-text{font-size:32px;font-weight:800;letter-spacing:2px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-sub{font-size:13px;font-weight:400;color:var(--text3);letter-spacing:4px;text-transform:uppercase;}
+.loading-bar-wrap{width:220px;height:4px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
+.loading-bar{height:100%;width:0%;background:var(--grad);border-radius:10px;transition:width 0.1s linear;box-shadow:0 0 12px var(--p3);}
+.loading-pct{font-family:var(--mono);font-size:13px;color:var(--text3);}
+@keyframes logoFloat{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-8px) scale(1.04);}}
+
+/* ===== ONBOARDING ===== */
+#onboarding{background:var(--grad3);}
+.onboard-slider{flex:1;display:flex;overflow:hidden;position:relative;}
+.onboard-slide{min-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;gap:24px;transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);}
+.onboard-slide svg{width:200px;height:180px;filter:drop-shadow(0 0 24px var(--p1));}
+.onboard-title{font-size:26px;font-weight:700;text-align:center;line-height:1.3;}
+.onboard-desc{font-size:14px;color:var(--text2);text-align:center;line-height:1.7;max-width:300px;}
+.onboard-dots{display:flex;gap:8px;justify-content:center;padding:8px 0;}
+.onboard-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);transition:all 0.3s ease;}
+.onboard-dot.active{width:24px;border-radius:4px;background:var(--grad);}
+.onboard-footer{padding:24px 32px 40px;display:flex;justify-content:space-between;align-items:center;gap:16px;}
+.btn-ghost{background:transparent;color:var(--text2);font-size:14px;font-weight:500;padding:12px 20px;}
+.btn-primary{background:var(--grad);color:#fff;font-size:15px;font-weight:700;padding:14px 32px;border-radius:50px;box-shadow:0 4px 20px rgba(108,59,255,0.5);transition:all 0.3s ease;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(108,59,255,0.6);}
+.btn-primary:active{transform:scale(0.97);}
+.btn-outline{background:transparent;color:var(--p1);border:2px solid var(--p1);font-size:15px;font-weight:600;padding:13px 32px;border-radius:50px;transition:all 0.3s;}
+.btn-outline:hover{background:var(--p1);color:#fff;}
+
+/* ===== AUTH SCREENS ===== */
+#loginScreen,#signupScreen,#forgotScreen{background:var(--bg);}
+.auth-header{padding:56px 28px 16px;display:flex;flex-direction:column;gap:6px;}
+.auth-header h1{font-size:28px;font-weight:800;}
+.auth-header p{font-size:14px;color:var(--text2);}
+.auth-body{flex:1;overflow-y:auto;padding:16px 28px 32px;display:flex;flex-direction:column;gap:16px;}
+.auth-gradient-top{position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(108,59,255,0.3),transparent 70%);pointer-events:none;}
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.field-wrap{position:relative;display:flex;align-items:center;}
+.field-wrap input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius2);padding:14px 44px 14px 16px;font-size:15px;color:var(--text);transition:border-color 0.3s,background 0.3s;}
+.field-wrap input:focus{border-color:var(--p1);background:var(--card2);}
+.field-wrap input::placeholder{color:var(--text3);}
+.field-icon{position:absolute;right:14px;width:20px;height:20px;opacity:0.5;}
+.field-toggle{position:absolute;right:14px;cursor:pointer;opacity:0.5;background:none;}
+.error-msg{font-size:12px;color:var(--error);display:none;}
+.error-msg.show{display:block;}
+.auth-divider{display:flex;align-items:center;gap:12px;color:var(--text3);font-size:13px;}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:12px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius2);padding:14px;font-size:15px;font-weight:600;color:var(--text);transition:all 0.3s;width:100%;}
+.google-btn:hover{border-color:var(--p2);background:var(--card2);}
+.auth-link{text-align:center;font-size:14px;color:var(--text2);}
+.auth-link span{color:var(--p2);font-weight:600;cursor:pointer;}
+.auth-terms{text-align:center;font-size:11px;color:var(--text3);line-height:1.6;}
+.device-warning{background:rgba(255,82,82,0.12);border:1px solid rgba(255,82,82,0.3);border-radius:var(--radius2);padding:12px 16px;font-size:13px;color:var(--error);display:none;}
+.device-warning.show{display:block;}
+
+/* ===== MAIN APP ===== */
+#mainApp{background:var(--bg);display:flex;flex-direction:column;max-width:480px;margin:0 auto;width:100%;}
+.main-content{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;}
+.main-content::-webkit-scrollbar{display:none;}
+.bottom-nav{display:flex;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 env(safe-area-inset-bottom,8px);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;cursor:pointer;position:relative;transition:all 0.3s;}
+.nav-item svg{width:24px;height:24px;transition:all 0.3s;}
+.nav-item span{font-size:10px;font-weight:500;color:var(--text3);transition:color 0.3s;}
+.nav-item.active span{color:var(--p2);}
+.nav-item .nav-indicator{position:absolute;top:0;left:50%;transform:translateX(-50%);width:32px;height:3px;background:var(--grad);border-radius:0 0 4px 4px;opacity:0;transition:opacity 0.3s;}
+.nav-item.active .nav-indicator{opacity:1;}
+
+/* ===== DASHBOARD ===== */
+.dash-header{padding:52px 20px 16px;display:flex;justify-content:space-between;align-items:center;position:relative;}
+.dash-header::before{content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(108,59,255,0.2),transparent 70%);pointer-events:none;}
+.user-greet{display:flex;flex-direction:column;}
+.greet-time{font-size:12px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.greet-name{font-size:20px;font-weight:700;}
+.header-actions{display:flex;gap:12px;align-items:center;}
+.icon-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;position:relative;}
+.icon-btn:hover{background:var(--card2);}
+.notif-badge{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--error);border:2px solid var(--bg);}
+.avatar-btn{width:40px;height:40px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;border:2px solid var(--p1);box-shadow:0 0 12px rgba(108,59,255,0.4);}
+.avatar-btn img{width:100%;height:100%;object-fit:cover;}
+.avatar-btn .avatar-initial{font-size:16px;font-weight:700;color:#fff;}
+
+/* Wallet Card */
+.wallet-section{padding:0 20px 20px;}
+.wallet-card{background:var(--grad);border-radius:24px;padding:24px;position:relative;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;}
+.wallet-card::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.08);}
+.wallet-card::after{content:'';position:absolute;bottom:-30px;left:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.wcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;position:relative;z-index:1;}
+.wcard-label{font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;}
+.wcard-menu{width:28px;height:28px;display:flex;flex-direction:column;justify-content:center;gap:4px;cursor:pointer;}
+.wcard-menu span{display:block;width:18px;height:2px;background:rgba(255,255,255,0.7);border-radius:2px;}
+.wcard-balance{position:relative;z-index:1;}
+.balance-currency{font-size:20px;font-weight:600;color:rgba(255,255,255,0.8);vertical-align:super;margin-right:2px;}
+.balance-amount{font-size:42px;font-weight:800;font-family:var(--mono);letter-spacing:-1px;transition:all 0.5s ease;}
+.balance-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px;}
+.wcard-footer{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;margin-top:20px;}
+.wcard-user{font-size:14px;font-weight:600;color:rgba(255,255,255,0.9);}
+.wcard-id{font-size:11px;font-family:var(--mono);color:rgba(255,255,255,0.6);}
+
+/* Quick Actions */
+.quick-actions{padding:0 20px 24px;}
+.section-title{font-size:16px;font-weight:700;margin-bottom:16px;}
+.qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.qa-item{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;}
+.qa-icon{width:56px;height:56px;border-radius:18px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all 0.3s;box-shadow:var(--shadow2);}
+.qa-icon:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
+.qa-icon svg{width:26px;height:26px;}
+.qa-label{font-size:11px;font-weight:500;color:var(--text2);text-align:center;}
+
+/* Transactions */
+.txn-section{padding:0 20px 100px;}
+.txn-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.txn-see-all{font-size:13px;font-weight:600;color:var(--p2);cursor:pointer;}
+.txn-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;transition:all 0.3s;cursor:pointer;}
+.txn-card:hover{background:var(--card2);transform:translateX(4px);}
+.txn-avatar{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:700;color:#fff;}
+.txn-avatar.credit{background:linear-gradient(135deg,#00E676,#00BFA5);}
+.txn-avatar.debit{background:linear-gradient(135deg,#FF5252,#FF1744);}
+.txn-avatar.pending{background:linear-gradient(135deg,#FFD740,#FF9800);}
+.txn-info{flex:1;}
+.txn-name{font-size:14px;font-weight:600;}
+.txn-date{font-size:12px;color:var(--text3);margin-top:2px;}
+.txn-amount{font-size:15px;font-weight:700;font-family:var(--mono);}
+.txn-amount.credit{color:var(--success);}
+.txn-amount.debit{color:var(--error);}
+
+/* Stats */
+.stats-section{padding:0 20px 24px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;}
+.stat-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.stat-value{font-size:20px;font-weight:700;font-family:var(--mono);}
+.stat-change{font-size:11px;margin-top:4px;display:flex;align-items:center;gap:4px;}
+.stat-change.up{color:var(--success);}
+.stat-change.down{color:var(--error);}
+
+/* ===== SEND MONEY ===== */
+.inner-page{background:var(--bg);position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1),opacity 0.4s;transform:translateX(100%);opacity:0;max-width:480px;margin:0 auto;}
+.inner-page.open{transform:translateX(0);opacity:1;}
+.inner-header{display:flex;align-items:center;gap:16px;padding:52px 20px 16px;}
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.3s;}
+.back-btn:hover{background:var(--card2);}
+.inner-title{font-size:20px;font-weight:700;}
+.inner-body{flex:1;overflow-y:auto;padding:16px 20px;scrollbar-width:none;}
+.inner-body::-webkit-scrollbar{display:none;}
+.search-box{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius2);padding:14px 16px;margin-bottom:24px;}
+.search-box svg{width:20px;height:20px;opacity:0.5;flex-shrink:0;}
+.search-box input{background:none;border:none;flex:1;font-size:15px;color:var(--text);}
+.search-box input::placeholder{color:var(--text3);}
+.contacts-list{display:flex;flex-direction:column;gap:10px;}
+.contact-card{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);cursor:pointer;transition:all 0.3s;}
+.contact-card:hover{background:var(--card2);transform:translateX(4px);}
+.contact-avatar{width:44px;height:44px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;}
+.contact-avatar img{width:100%;height:100%;object-fit:cover;}
+.contact-info{flex:1;}
+.contact-name{font-size:14px;font-weight:600;}
+.contact-email{font-size:12px;color:var(--text3);margin-top:2px;}
+.contact-arrow{width:20px;height:20px;opacity:0.4;}
+
+/* Amount Input */
+.amount-pad{text-align:center;padding:24px 0;}
+.amount-label{font-size:13px;color:var(--text3);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;}
+.amount-display{font-size:52px;font-weight:800;font-family:var(--mono);letter-spacing:-2px;min-height:70px;display:flex;align-items:center;justify-content:center;gap:4px;}
+.amount-display .currency{font-size:28px;color:var(--text2);align-self:flex-start;margin-top:12px;}
+.amount-display .value{color:var(--text);}
+.amount-display .cursor{width:3px;height:50px;background:var(--p2);border-radius:2px;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 20px;}
+.numpad-btn{background:var(--card);border:1px solid var(--border);border-radius:16px;height:64px;font-size:22px;font-weight:600;color:var(--text);transition:all 0.15s;position:relative;overflow:hidden;}
+.numpad-btn:active{transform:scale(0.95);background:var(--card2);}
+.numpad-btn.backspace{font-size:18px;}
+.numpad-btn.action-pay{background:var(--grad);color:#fff;border:none;font-size:16px;font-weight:700;box-shadow:var(--shadow);}
+.note-field{margin:16px 20px 0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px;display:flex;gap:10px;align-items:center;}
+.note-field input{background:none;border:none;flex:1;font-size:14px;color:var(--text);}
+.note-field input::placeholder{color:var(--text3);}
+
+/* Confirmation Screen */
+.confirm-screen{background:var(--bg);position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;transition:all 0.4s;transform:translateY(100%);opacity:0;max-width:480px;margin:0 auto;}
+.confirm-screen.open{transform:translateY(0);opacity:1;}
+.confirm-header{padding:52px 20px 24px;text-align:center;}
+.confirm-avatar{width:72px;height:72px;border-radius:50%;background:var(--grad);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;box-shadow:0 0 24px rgba(108,59,255,0.4);}
+.confirm-name{font-size:18px;font-weight:700;}
+.confirm-email{font-size:13px;color:var(--text3);}
+.confirm-amount-box{margin:0 20px 24px;background:var(--grad);border-radius:20px;padding:24px;text-align:center;}
+.confirm-amount-box .label{font-size:12px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.confirm-amount-box .value{font-size:40px;font-weight:800;font-family:var(--mono);color:#fff;}
+.confirm-details{margin:0 20px 24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0 16px;}
+.confirm-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
+.confirm-row:last-child{border-bottom:none;}
+.confirm-row .key{font-size:13px;color:var(--text3);}
+.confirm-row .val{font-size:14px;font-weight:600;}
+.confirm-footer{padding:0 20px 32px;display:flex;flex-direction:column;gap:12px;}
+.pin-input-wrap{display:flex;gap:10px;justify-content:center;margin-bottom:8px;}
+.pin-box{width:48px;height:56px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);text-align:center;font-size:22px;font-family:var(--mono);color:var(--text);transition:border-color 0.3s;}
+.pin-box:focus{border-color:var(--p1);}
+
+/* ===== RECEIVE MONEY ===== */
+.receive-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin:0 20px 20px;text-align:center;}
+.qr-wrapper{background:#fff;border-radius:16px;padding:20px;display:inline-block;margin:16px 0;box-shadow:var(--shadow2);}
+.qr-wrapper canvas{display:block;}
+.wallet-id-box{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin:0 20px 16px;}
+.wallet-id-box .id-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+.wallet-id-box .id-value{font-size:13px;font-family:var(--mono);font-weight:600;}
+.copy-btn{background:var(--grad);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+
+/* ===== QR SCANNER ===== */
+.scanner-view{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:20px;}
+.scanner-frame{width:260px;height:260px;position:relative;}
+.scanner-frame::before,.scanner-frame::after{content:'';position:absolute;width:40px;height:40px;border-color:var(--p1);border-style:solid;}
+.scanner-frame::before{top:0;left:0;border-width:3px 0 0 3px;border-radius:8px 0 0 0;}
+.scanner-frame::after{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 8px 0;}
+.scanner-corners::before,.scanner-corners::after{content:'';position:absolute;width:40px;height:40px;border-color:var(--p1);border-style:solid;}
+.scanner-corners::before{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 8px 0 0;}
+.scanner-corners::after{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 8px;}
+.scanner-line{position:absolute;left:10px;right:10px;height:2px;background:var(--grad);border-radius:2px;box-shadow:0 0 8px var(--p1);animation:scanLine 2.5s ease-in-out infinite;top:10px;}
+@keyframes scanLine{0%,100%{top:10px;}50%{top:calc(100% - 12px);}}
+.scanner-tip{font-size:14px;color:var(--text2);text-align:center;max-width:260px;}
+.scan-demo-btn{background:var(--grad);color:#fff;font-size:14px;font-weight:600;padding:14px 32px;border-radius:50px;box-shadow:var(--shadow);}
+
+/* ===== TRANSACTION HISTORY ===== */
+.txn-filter{display:flex;gap:8px;overflow-x:auto;padding:0 20px 16px;scrollbar-width:none;}
+.txn-filter::-webkit-scrollbar{display:none;}
+.filter-chip{padding:8px 18px;border-radius:50px;border:1.5px solid var(--border);font-size:13px;font-weight:500;color:var(--text2);background:var(--card);cursor:pointer;white-space:nowrap;transition:all 0.3s;flex-shrink:0;}
+.filter-chip.active{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 4px 16px rgba(108,59,255,0.4);}
+
+/* ===== NOTIFICATIONS ===== */
+.notif-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;margin-bottom:10px;cursor:pointer;transition:all 0.3s;position:relative;}
+.notif-card:hover{background:var(--card2);}
+.notif-card.unread::before{content:'';position:absolute;top:16px;right:16px;width:8px;height:8px;border-radius:50%;background:var(--p2);}
+.notif-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.notif-icon.pay{background:linear-gradient(135deg,rgba(108,59,255,0.3),rgba(74,144,255,0.3));}
+.notif-icon.credit{background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,191,165,0.2));}
+.notif-top{display:flex;gap:14px;align-items:flex-start;}
+.notif-text .title{font-size:14px;font-weight:600;}
+.notif-text .msg{font-size:13px;color:var(--text2);margin-top:3px;line-height:1.5;}
+.notif-time{font-size:11px;color:var(--text3);margin-top:8px;}
+
+/* ===== PROFILE ===== */
+.profile-hero{background:var(--grad);padding:60px 20px 40px;text-align:center;position:relative;}
+.profile-hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;}
+.profile-avatar-wrap{position:relative;display:inline-block;margin-bottom:16px;}
+.profile-avatar{width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,0.2);border:3px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff;overflow:hidden;cursor:pointer;}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;}
+.profile-edit-badge{position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--p1);cursor:pointer;}
+.profile-name{font-size:22px;font-weight:700;color:#fff;}
+.profile-email{font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px;}
+.profile-id{font-size:12px;font-family:var(--mono);color:rgba(255,255,255,0.5);margin-top:6px;}
+.profile-stats{display:flex;gap:1px;margin:24px 20px;background:var(--border);border-radius:var(--radius);overflow:hidden;}
+.pstat{flex:1;background:var(--card);padding:16px;text-align:center;}
+.pstat .val{font-size:18px;font-weight:700;font-family:var(--mono);}
+.pstat .lbl{font-size:11px;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:1px;}
+.profile-menu{margin:0 20px 32px;display:flex;flex-direction:column;gap:8px;}
+.pmenu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.3s;}
+.pmenu-item:hover{background:var(--card2);}
+.pmenu-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.pmenu-text{flex:1;}
+.pmenu-text .name{font-size:14px;font-weight:600;}
+.pmenu-text .desc{font-size:12px;color:var(--text3);margin-top:2px;}
+.pmenu-arrow{width:20px;height:20px;opacity:0.4;}
+
+/* ===== SETTINGS ===== */
+.settings-section{margin:0 20px 20px;}
+.settings-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.settings-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.setting-item{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid var(--border);transition:background 0.3s;cursor:pointer;}
+.setting-item:last-child{border-bottom:none;}
+.setting-item:hover{background:var(--card2);}
+.setting-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.setting-info{flex:1;}
+.setting-info .name{font-size:14px;font-weight:500;}
+.setting-info .desc{font-size:12px;color:var(--text3);margin-top:2px;}
+.toggle-wrap{width:48px;height:28px;border-radius:14px;background:var(--border);position:relative;cursor:pointer;transition:background 0.3s;flex-shrink:0;}
+.toggle-wrap.on{background:var(--p1);}
+.toggle-knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);box-shadow:0 2px 6px rgba(0,0,0,0.3);}
+.toggle-wrap.on .toggle-knob{transform:translateX(20px);}
+
+/* ===== SUCCESS/ERROR POPUP ===== */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;max-width:480px;margin:0 auto;}
+.overlay.show{opacity:1;pointer-events:all;}
+.popup{background:var(--bg);border-radius:32px 32px 0 0;padding:32px 24px 48px;width:100%;transform:translateY(100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);}
+.overlay.show .popup{transform:translateY(0);}
+.popup-icon{width:80px;height:80px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;position:relative;}
+.popup-icon::after{content:'';position:absolute;inset:-8px;border-radius:50%;opacity:0.2;}
+.popup-icon.success{background:rgba(0,230,118,0.15);}
+.popup-icon.success::after{background:var(--success);}
+.popup-icon.error{background:rgba(255,82,82,0.15);}
+.popup-icon.error::after{background:var(--error);}
+.popup-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:8px;}
+.popup-msg{font-size:14px;color:var(--text2);text-align:center;line-height:1.6;margin-bottom:28px;}
+.popup-detail{background:var(--card);border-radius:var(--radius2);padding:16px;margin-bottom:24px;display:flex;flex-direction:column;gap:10px;}
+.popup-row{display:flex;justify-content:space-between;align-items:center;}
+.popup-row .k{font-size:13px;color:var(--text3);}
+.popup-row .v{font-size:13px;font-weight:600;font-family:var(--mono);}
+.popup-actions{display:flex;gap:12px;}
+.popup-actions .btn-primary{flex:1;}
+.popup-actions .btn-ghost2{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:600;padding:14px;border-radius:50px;}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;top:env(safe-area-inset-top,20px);left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(30,30,50,0.95);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;z-index:999;max-width:calc(100% - 40px);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(20px);border:1px solid var(--border);box-shadow:var(--shadow2);display:flex;align-items:center;gap:10px;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success-toast{border-color:rgba(0,230,118,0.4);}
+.toast.error-toast{border-color:rgba(255,82,82,0.4);}
+
+/* ===== CASHBACK BANNER ===== */
+.cashback-banner{margin:0 20px 20px;background:linear-gradient(135deg,#FF6B35,#FF8C42);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;position:relative;overflow:hidden;}
+.cashback-banner::after{content:'';position:absolute;right:-20px;top:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.1);}
+.cashback-text .headline{font-size:14px;font-weight:700;color:#fff;}
+.cashback-text .sub{font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px;}
+.cashback-amount{font-size:24px;font-weight:800;color:#fff;font-family:var(--mono);margin-left:auto;position:relative;z-index:1;}
+
+/* ===== RIPPLE ===== */
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.3);transform:scale(0);animation:rippleAnim 0.6s linear;pointer-events:none;}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0;}}
+
+/* ===== CHART BARS ===== */
+.mini-chart{display:flex;align-items:flex-end;gap:6px;height:60px;padding:0 20px;margin-bottom:24px;}
+.chart-bar{flex:1;border-radius:4px 4px 0 0;background:var(--grad);opacity:0.4;transition:all 0.5s ease;cursor:pointer;min-height:8px;}
+.chart-bar:hover{opacity:1;}
+.chart-bar.active{opacity:1;}
+
+/* ===== MISC ===== */
+.section-divider{height:1px;background:var(--border);margin:0 20px 24px;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-state svg{width:80px;height:80px;opacity:0.3;margin-bottom:16px;}
+.empty-state p{font-size:15px;}
+.loader-spin{width:36px;height:36px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--p1);animation:spin 0.8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.fab{position:fixed;bottom:90px;right:calc(50% - 240px + 20px);width:52px;height:52px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);cursor:pointer;transition:all 0.3s;z-index:30;}
+.fab:hover{transform:scale(1.1);}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:0;height:0;}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.anim-in{animation:fadeIn 0.5s ease forwards;}
+.anim-in:nth-child(2){animation-delay:0.1s;}
+.anim-in:nth-child(3){animation-delay:0.2s;}
+.anim-in:nth-child(4){animation-delay:0.3s;}
+.anim-in:nth-child(5){animation-delay:0.4s;}
+.anim-in:nth-child(6){animation-delay:0.5s;}
+
+/* Edit Profile Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:300;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;max-width:480px;margin:0 auto;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal-sheet{background:var(--bg);border-radius:32px 32px 0 0;padding:32px 24px 48px;transform:translateY(100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);width:100%;}
+.modal-overlay.show .modal-sheet{transform:translateY(0);}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 24px;}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px;}
+
+/* Device check banner */
+.device-locked{background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.3);border-radius:12px;padding:16px;margin:16px 20px;font-size:13px;color:var(--error);display:none;line-height:1.5;}
+
+/* Responsive for desktop */
+@media(min-width:481px){
+  #loadingScreen,#onboarding,#loginScreen,#signupScreen,#forgotScreen,#mainApp,.inner-page,.confirm-screen,.overlay,.modal-overlay{max-width:480px;left:50%;transform:translateX(-50%)!important;}
+  .page{left:50%;transform:translateX(-50%) translateY(20px)!important;}
+  .page.active{transform:translateX(-50%) translateY(0)!important;}
+  #loadingScreen,#onboarding{transform:translateX(-50%)!important;max-width:480px;width:100%;}
+  body{background:#050510;}
+  body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,#050510 0%,#0a0a2a 100%);z-index:-1;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen" class="page active">
+  <div class="logo-container">
+    <svg class="logo-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="logoG" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#6C3BFF"/>
+          <stop offset="50%" stop-color="#4A90FF"/>
+          <stop offset="100%" stop-color="#00D4FF"/>
+        </linearGradient>
+        <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect width="80" height="80" rx="22" fill="url(#logoG)" filter="url(#glow)"/>
+      <path d="M22 25h20l-4 12h12L26 58l6-18H18L22 25z" fill="white" stroke="white" stroke-width="1" stroke-linejoin="round"/>
+    </svg>
+    <div class="logo-text">FAST PAY</div>
+    <div class="logo-sub">Premium Digital Wallet</div>
+  </div>
+  <div class="loading-bar-wrap">
+    <div class="loading-bar" id="loadingBar"></div>
+  </div>
+  <div class="loading-pct" id="loadingPct">0%</div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding" class="page">
+  <div class="onboard-slider">
+    <div class="onboard-slide" id="slide0">
+      <svg viewBox="0 0 200 180" fill="none">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="200" y2="180" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6C3BFF"/><stop offset="100%" stop-color="#00D4FF"/></linearGradient></defs>
+        <rect x="30" y="20" width="140" height="90" rx="16" fill="url(#g1)" opacity="0.9"/>
+        <rect x="30" y="20" width="140" height="90" rx="16" fill="none" stroke="white" stroke-opacity="0.2" stroke-width="1"/>
+        <text x="44" y="50" font-size="10" fill="rgba(255,255,255,0.7)" font-family="sans-serif">WALLET BALANCE</text>
+        <text x="44" y="80" font-size="26" fill="white" font-weight="700" font-family="monospace">₹ 12,500</text>
+        <circle cx="155" cy="45" r="14" fill="rgba(255,255,255,0.15)"/>
+        <circle cx="100" cy="140" r="30" fill="#6C3BFF" opacity="0.25"/>
+        <circle cx="60" cy="155" r="15" fill="#00D4FF" opacity="0.2"/>
+        <path d="M75 140 L100 115 L125 140 L115 140 L115 165 L85 165 L85 140 Z" fill="url(#g1)"/>
+        <circle cx="100" cy="108" r="6" fill="white"/>
+      </svg>
+      <div class="onboard-title">Your Smart Digital Wallet</div>
+      <div class="onboard-desc">Manage all your money in one secure place. Send, receive and track effortlessly.</div>
+    </div>
+    <div class="onboard-slide" id="slide1" style="transform:translateX(100%)">
+      <svg viewBox="0 0 200 180" fill="none">
+        <defs><linearGradient id="g2" x1="0" y1="0" x2="200" y2="180" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#4A90FF"/></linearGradient></defs>
+        <circle cx="100" cy="90" r="55" fill="url(#g2)" opacity="0.2"/>
+        <rect x="65" y="55" width="70" height="70" rx="8" fill="white"/>
+        <rect x="72" y="62" width="56" height="56" rx="4" fill="#1a1a2e"/>
+        <rect x="79" y="69" width="10" height="10" rx="2" fill="#6C3BFF"/>
+        <rect x="79" y="83" width="10" height="10" rx="2" fill="#4A90FF"/>
+        <rect x="79" y="97" width="10" height="10" rx="2" fill="#00D4FF"/>
+        <rect x="93" y="69" width="10" height="10" rx="2" fill="#4A90FF"/>
+        <rect x="93" y="97" width="10" height="10" rx="2" fill="#6C3BFF"/>
+        <rect x="107" y="69" width="10" height="10" rx="2" fill="#00D4FF"/>
+        <rect x="107" y="83" width="10" height="10" rx="2" fill="#6C3BFF"/>
+        <rect x="107" y="97" width="10" height="10" rx="2" fill="#4A90FF"/>
+        <path d="M30 90 Q50 75 100 85" stroke="url(#g2)" stroke-width="3" stroke-dasharray="6 4" stroke-linecap="round"/>
+        <circle cx="30" cy="90" r="10" fill="url(#g2)"/>
+        <circle cx="170" cy="90" r="10" fill="url(#g2)"/>
+        <path d="M170 90 Q150 105 100 95" stroke="url(#g2)" stroke-width="3" stroke-dasharray="6 4" stroke-linecap="round"/>
+      </svg>
+      <div class="onboard-title">Instant QR Payments</div>
+      <div class="onboard-desc">Scan any QR code to pay instantly. Generate your own QR to receive money from anyone.</div>
+    </div>
+    <div class="onboard-slide" id="slide2" style="transform:translateX(200%)">
+      <svg viewBox="0 0 200 180" fill="none">
+        <defs><linearGradient id="g3" x1="0" y1="0" x2="200" y2="180" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#00E676"/><stop offset="100%" stop-color="#00D4FF"/></linearGradient></defs>
+        <circle cx="100" cy="80" r="44" fill="url(#g3)" opacity="0.15"/>
+        <rect x="60" y="48" width="80" height="64" rx="12" fill="url(#g3)" opacity="0.9"/>
+        <path d="M78 80 L90 92 L122 65" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="45" cy="130" r="18" fill="#A855F7" opacity="0.4"/>
+        <circle cx="155" cy="130" r="18" fill="#4A90FF" opacity="0.4"/>
+        <path d="M63 130 L137 130" stroke="url(#g3)" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle cx="45" cy="130" r="6" fill="#A855F7"/>
+        <circle cx="155" cy="130" r="6" fill="#4A90FF"/>
+        <path d="M97 130 L103 123 L109 130 L103 137 Z" fill="url(#g3)"/>
+      </svg>
+      <div class="onboard-title">Safe & Instant Transfers</div>
+      <div class="onboard-desc">Bank-grade security with real-time transfers. Get ₹500 bonus on your first sign up!</div>
+    </div>
+  </div>
+  <div class="onboard-dots">
+    <div class="onboard-dot active" data-i="0"></div>
+    <div class="onboard-dot" data-i="1"></div>
+    <div class="onboard-dot" data-i="2"></div>
+  </div>
+  <div class="onboard-footer">
+    <button class="btn-ghost" id="obSkip" onclick="showPage('loginScreen')">Skip</button>
+    <div style="display:flex;gap:12px;">
+      <button class="btn-outline" id="obPrev" style="display:none" onclick="obGoTo(currentSlide-1)">Back</button>
+      <button class="btn-primary" id="obNext" onclick="obNext()">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="page">
+  <div class="auth-gradient-top"></div>
+  <div class="auth-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <svg width="32" height="32" viewBox="0 0 80 80"><defs><linearGradient id="lg1" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6C3BFF"/><stop offset="100%" stop-color="#00D4FF"/></linearGradient></defs><rect width="80" height="80" rx="22" fill="url(#lg1)"/><path d="M22 25h20l-4 12h12L26 58l6-18H18L22 25z" fill="white"/></svg>
+      <span style="font-size:18px;font-weight:800;letter-spacing:1px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">FAST PAY</span>
+    </div>
+    <h1>Welcome back</h1>
+    <p>Sign in to your wallet</p>
+  </div>
+  <div class="auth-body">
+    <div class="device-warning" id="loginDeviceWarn">This account is linked to another device. Contact support if this is your device.</div>
+    <div class="field-group">
+      <div class="field-label">Email address</div>
+      <div class="field-wrap">
+        <input type="email" id="loginEmail" placeholder="you@example.com">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#6C3BFF" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke="#6C3BFF" stroke-width="2"/></svg>
+      </div>
+      <div class="error-msg" id="loginEmailErr">Please enter a valid email</div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Password</div>
+      <div class="field-wrap">
+        <input type="password" id="loginPass" placeholder="••••••••">
+        <button class="field-toggle" onclick="togglePass('loginPass',this)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#888" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="#888" stroke-width="2"/></svg>
+        </button>
+      </div>
+      <div class="error-msg" id="loginPassErr">Password is required</div>
+    </div>
+    <div style="text-align:right;">
+      <span style="font-size:13px;color:var(--p2);font-weight:600;cursor:pointer;" onclick="showPage('forgotScreen')">Forgot password?</span>
+    </div>
+    <button class="btn-primary" style="width:100%;" onclick="doLogin()" id="loginBtn">Sign In</button>
+    <div class="auth-divider">or continue with</div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Sign in with Google
+    </button>
+    <div class="auth-link">Don't have an account? <span onclick="showPage('signupScreen')">Create one</span></div>
+  </div>
+</div>
+
+<!-- SIGNUP -->
+<div id="signupScreen" class="page">
+  <div class="auth-gradient-top"></div>
+  <div class="auth-header">
+    <h1>Create account</h1>
+    <p>Get ₹500 welcome bonus instantly</p>
+  </div>
+  <div class="auth-body">
+    <div class="device-warning" id="signupDeviceWarn">This device already has an account. Only 1 account per device allowed.</div>
+    <div class="field-group">
+      <div class="field-label">Full Name</div>
+      <div class="field-wrap">
+        <input type="text" id="signupName" placeholder="Your full name">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#6C3BFF" stroke-width="2"/><circle cx="12" cy="7" r="4" stroke="#6C3BFF" stroke-width="2"/></svg>
+      </div>
+      <div class="error-msg" id="signupNameErr">Name is required</div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Email address</div>
+      <div class="field-wrap">
+        <input type="email" id="signupEmail" placeholder="you@example.com">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#6C3BFF" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke="#6C3BFF" stroke-width="2"/></svg>
+      </div>
+      <div class="error-msg" id="signupEmailErr">Enter a valid email</div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Password</div>
+      <div class="field-wrap">
+        <input type="password" id="signupPass" placeholder="Min. 6 characters">
+        <button class="field-toggle" onclick="togglePass('signupPass',this)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#888" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="#888" stroke-width="2"/></svg>
+        </button>
+      </div>
+      <div class="error-msg" id="signupPassErr">Password must be at least 6 characters</div>
+    </div>
+    <button class="btn-primary" style="width:100%;margin-top:4px;" onclick="doSignup()" id="signupBtn">Create Account & Get ₹500</button>
+    <div class="auth-divider">or continue with</div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Sign up with Google
+    </button>
+    <div class="auth-link">Already have an account? <span onclick="showPage('loginScreen')">Sign in</span></div>
+    <div class="auth-terms">By creating an account, you agree to our Terms of Service and Privacy Policy. This is a virtual wallet for demo purposes only.</div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div id="forgotScreen" class="page">
+  <div class="auth-header" style="padding-top:52px;">
+    <button class="back-btn" onclick="showPage('loginScreen')" style="margin-bottom:16px;width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <h1>Reset Password</h1>
+    <p>We'll send you a reset link</p>
+  </div>
+  <div class="auth-body">
+    <div class="field-group">
+      <div class="field-label">Email address</div>
+      <div class="field-wrap">
+        <input type="email" id="forgotEmail" placeholder="you@example.com">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#6C3BFF" stroke-width="2"/><polyline points="22,6 12,13 2,6" stroke="#6C3BFF" stroke-width="2"/></svg>
+      </div>
+      <div class="error-msg" id="forgotEmailErr">Enter a valid email</div>
+    </div>
+    <button class="btn-primary" style="width:100%;" onclick="doForgotPassword()">Send Reset Link</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="page">
+  <div class="main-content" id="mainContent">
+
+    <!-- DASHBOARD TAB -->
+    <div id="tabDashboard">
+      <div class="dash-header">
+        <div class="user-greet">
+          <div class="greet-time" id="greetTime">Good morning</div>
+          <div class="greet-name" id="greetName">User</div>
+        </div>
+        <div class="header-actions">
+          <div class="icon-btn" onclick="openInner('notifPage')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="#6C3BFF" stroke-width="2" stroke-linecap="round"/></svg>
+            <div class="notif-badge" id="notifBadge" style="display:none;"></div>
+          </div>
+          <div class="avatar-btn" onclick="switchTab('profile')" id="dashAvatar">
+            <span class="avatar-initial" id="dashAvatarInitial">U</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wallet-section">
+        <div class="wallet-card" onclick="openInner('walletPage')">
+          <div class="wcard-top">
+            <div>
+              <div class="wcard-label">Wallet Balance</div>
+            </div>
+            <div class="wcard-menu"><span></span><span></span><span></span></div>
+          </div>
+          <div class="wcard-balance">
+            <span class="balance-currency">₹</span>
+            <span class="balance-amount" id="dashBalance">0.00</span>
+          </div>
+          <div class="balance-sub">Available to spend</div>
+          <div class="wcard-footer">
+            <div>
+              <div class="wcard-user" id="dashCardName">User</div>
+              <div class="wcard-id" id="dashCardId">FP-000000</div>
+            </div>
+            <svg width="40" height="24" viewBox="0 0 40 24"><circle cx="15" cy="12" r="12" fill="rgba(255,255,255,0.3)"/><circle cx="25" cy="12" r="12" fill="rgba(255,255,255,0.2)"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="cashback-banner anim-in">
+        <svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="rgba(255,255,255,0.15)"/><text x="9" y="24" font-size="18" fill="white">⚡</text></svg>
+        <div class="cashback-text">
+          <div class="headline">Cashback Offer Active</div>
+          <div class="sub">5% back on all transfers today</div>
+        </div>
+        <div class="cashback-amount">5%</div>
+      </div>
+
+      <div class="quick-actions">
+        <div class="section-title">Quick Actions</div>
+        <div class="qa-grid">
+          <div class="qa-item" onclick="openInner('sendPage')">
+            <div class="qa-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="url(#qa1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="qa1" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6C3BFF"/><stop offset="100%" stop-color="#00D4FF"/></linearGradient></defs></svg>
+            </div>
+            <div class="qa-label">Send</div>
+          </div>
+          <div class="qa-item" onclick="openInner('receivePage')">
+            <div class="qa-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="qa2" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#A855F7"/><stop offset="100%" stop-color="#4A90FF"/></linearGradient></defs><path d="M12 22V12m0 10l-3-3m3 3l3-3" stroke="url(#qa2)" stroke-width="2" stroke-linecap="round"/><path d="M20 16.74A9 9 0 1016.74 20" stroke="url(#qa2)" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="qa-label">Receive</div>
+          </div>
+          <div class="qa-item" onclick="openInner('qrPage')">
+            <div class="qa-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="qa3" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#00D4FF"/><stop offset="100%" stop-color="#6C3BFF"/></linearGradient></defs><rect x="3" y="3" width="7" height="7" rx="1" stroke="url(#qa3)" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="url(#qa3)" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="url(#qa3)" stroke-width="2"/><path d="M14 14h2v2h-2zM18 14h3M14 18h2M16 20v2M20 16v2M18 20h2" stroke="url(#qa3)" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="qa-label">Scan QR</div>
+          </div>
+          <div class="qa-item" onclick="switchTab('history')">
+            <div class="qa-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><defs><linearGradient id="qa4" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FF6B35"/><stop offset="100%" stop-color="#FFD740"/></linearGradient></defs><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="url(#qa4)" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="qa-label">History</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-section">
+        <div class="section-title">Overview</div>
+        <div class="mini-chart" id="miniChart"></div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Sent This Month</div>
+            <div class="stat-value" id="statSent">₹0</div>
+            <div class="stat-change down" id="statSentChg">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 20V4M5 13l7 7 7-7" stroke="#FF5252" stroke-width="2"/></svg> 0%
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Received This Month</div>
+            <div class="stat-value" id="statRecv">₹0</div>
+            <div class="stat-change up" id="statRecvChg">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M5 11l7-7 7 7" stroke="#00E676" stroke-width="2"/></svg> 0%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="txn-section">
+        <div class="txn-header">
+          <div class="section-title" style="margin-bottom:0">Recent Activity</div>
+          <div class="txn-see-all" onclick="switchTab('history')">See All</div>
+        </div>
+        <div style="height:12px;"></div>
+        <div id="dashTxnList">
+          <div style="text-align:center;padding:32px;color:var(--text3);">
+            <div class="loader-spin" id="dashTxnLoader"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY TAB -->
+    <div id="tabHistory" style="display:none;">
+      <div style="padding:52px 20px 16px;"><h2 style="font-size:22px;font-weight:800;">Transactions</h2></div>
+      <div class="txn-filter">
+        <div class="filter-chip active" onclick="filterTxns('all',this)">All</div>
+        <div class="filter-chip" onclick="filterTxns('credit',this)">Received</div>
+        <div class="filter-chip" onclick="filterTxns('debit',this)">Sent</div>
+        <div class="filter-chip" onclick="filterTxns('cashback',this)">Cashback</div>
+      </div>
+      <div id="historyList" style="padding:0 20px 100px;"></div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="tabProfile" style="display:none;padding-bottom:100px;">
+      <div class="profile-hero">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" id="profileAvatarBig">
+            <span id="profileAvatarInitial">U</span>
+          </div>
+          <div class="profile-edit-badge" onclick="openEditProfile()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#6C3BFF" stroke-width="2"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#6C3BFF" stroke-width="2"/></svg>
+          </div>
+        </div>
+        <div class="profile-name" id="profileName">User</div>
+        <div class="profile-email" id="profileEmail">user@email.com</div>
+        <div class="profile-id" id="profileWalletId">FP-000000</div>
+      </div>
+      <div class="profile-stats">
+        <div class="pstat"><div class="val" id="pstatTxn">0</div><div class="lbl">Transactions</div></div>
+        <div class="pstat"><div class="val" id="pstatSent">₹0</div><div class="lbl">Total Sent</div></div>
+        <div class="pstat"><div class="val" id="pstatRecv">₹0</div><div class="lbl">Total Recv</div></div>
+      </div>
+      <div class="profile-menu">
+        <div class="pmenu-item" onclick="openEditProfile()">
+          <div class="pmenu-icon" style="background:rgba(108,59,255,0.15);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#6C3BFF" stroke-width="2"/><circle cx="12" cy="7" r="4" stroke="#6C3BFF" stroke-width="2"/></svg>
+          </div>
+          <div class="pmenu-text"><div class="name">Edit Profile</div><div class="desc">Update your name and photo</div></div>
+          <svg class="pmenu-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="pmenu-item" onclick="openInner('settingsPage')">
+          <div class="pmenu-icon" style="background:rgba(74,144,255,0.15);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#4A90FF" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="#4A90FF" stroke-width="2"/></svg>
+          </div>
+          <div class="pmenu-text"><div class="name">Settings</div><div class="desc">Preferences and security</div></div>
+          <svg class="pmenu-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="pmenu-item" onclick="openInner('notifPage')">
+          <div class="pmenu-icon" style="background:rgba(0,212,255,0.15);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="#00D4FF" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="pmenu-text"><div class="name">Notifications</div><div class="desc">View all alerts</div></div>
+          <svg class="pmenu-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="pmenu-item" style="border-color:rgba(255,82,82,0.2);" onclick="doLogout()">
+          <div class="pmenu-icon" style="background:rgba(255,82,82,0.12);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="#FF5252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="pmenu-text"><div class="name" style="color:var(--error);">Sign Out</div><div class="desc">Log out of your account</div></div>
+          <svg class="pmenu-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#FF5252" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)">
+      <div class="nav-indicator"></div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="url(#nav1)" stroke-width="2"/><polyline points="9 22 9 12 15 12 15 22" stroke="url(#nav1)" stroke-width="2"/><defs><linearGradient id="nav1" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6C3BFF"/><stop offset="100%" stop-color="#4A90FF"/></linearGradient></defs></svg>
+      <span>Home</span>
+    </div>
+    <div class="nav-item" data-tab="history" onclick="switchTab('history',this)">
+      <div class="nav-indicator"></div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#888" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>History</span>
+    </div>
+    <div class="nav-item" style="position:relative;" onclick="openInner('sendPage')">
+      <div style="position:absolute;top:-18px;width:56px;height:56px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);border:3px solid var(--bg);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </div>
+      <span style="margin-top:28px;">Pay</span>
+    </div>
+    <div class="nav-item" data-tab="wallet" onclick="openInner('walletPage')">
+      <div class="nav-indicator"></div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 12V7H5a2 2 0 010-4h14a1 1 0 011 1v1M21 12v5H5a2 2 0 010-4h16zm0 0v-5" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="12" r="1" fill="#888"/></svg>
+      <span>Wallet</span>
+    </div>
+    <div class="nav-item" data-tab="profile" onclick="switchTab('profile',this)">
+      <div class="nav-indicator"></div>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#888" stroke-width="2"/><circle cx="12" cy="7" r="4" stroke="#888" stroke-width="2"/></svg>
+      <span>Profile</span>
+    </div>
+  </div>
+</div><!-- end mainApp -->
+
+<!-- ===== INNER PAGES ===== -->
+
+<!-- WALLET PAGE -->
+<div id="walletPage" class="inner-page">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeInner('walletPage')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">My Wallet</div>
+  </div>
+  <div class="inner-body">
+    <div class="wallet-card" style="margin-bottom:24px;">
+      <div class="wcard-top"><div><div class="wcard-label">Total Balance</div></div></div>
+      <div class="wcard-balance"><span class="balance-currency">₹</span><span class="balance-amount" id="walletBalance">0.00</span></div>
+      <div class="balance-sub">Virtual wallet balance</div>
+      <div class="wcard-footer">
+        <div><div class="wcard-user" id="walletCardName">User</div><div class="wcard-id" id="walletCardId">FP-000000</div></div>
+        <svg width="40" height="24" viewBox="0 0 40 24"><circle cx="15" cy="12" r="12" fill="rgba(255,255,255,0.3)"/><circle cx="25" cy="12" r="12" fill="rgba(255,255,255,0.2)"/></svg>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+      <button class="btn-primary" style="border-radius:var(--radius2);" onclick="closeInner('walletPage');setTimeout(()=>openInner('sendPage'),300)">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="white" stroke-width="2"/></svg> Send
+        </div>
+      </button>
+      <button class="btn-outline" style="border-radius:var(--radius2);" onclick="closeInner('walletPage');setTimeout(()=>openInner('receivePage'),300)">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 22V12m0 10l-3-3m3 3l3-3" stroke="var(--p1)" stroke-width="2"/></svg> Receive
+        </div>
+      </button>
+    </div>
+    <div class="section-title">Wallet Transactions</div>
+    <div id="walletTxnList"></div>
+  </div>
+</div>
+
+<!-- SEND MONEY PAGE -->
+<div id="sendPage" class="inner-page">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeInner('sendPage')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">Send Money</div>
+  </div>
+  <div class="inner-body">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="userSearch" placeholder="Search by name or email..." oninput="searchUsers(this.value)">
+    </div>
+    <div class="section-title" style="margin-bottom:12px;">All Users</div>
+    <div class="contacts-list" id="userList">
+      <div style="text-align:center;padding:32px;"><div class="loader-spin"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIVE PAGE -->
+<div id="receivePage" class="inner-page">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeInner('receivePage')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">Receive Money</div>
+  </div>
+  <div class="inner-body">
+    <div class="receive-card">
+      <div style="font-size:14px;color:var(--text2);margin-bottom:4px;">Your QR Code</div>
+      <div style="font-size:12px;color:var(--text3);">Ask others to scan to send you money</div>
+      <div class="qr-wrapper"><canvas id="myQR" width="180" height="180"></canvas></div>
+      <div style="font-size:13px;color:var(--text2);">Wallet ID</div>
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;margin-top:4px;" id="receiveWalletId">FP-000000</div>
+    </div>
+    <div class="wallet-id-box">
+      <div style="flex:1;">
+        <div class="id-label">Your Wallet ID</div>
+        <div class="id-value" id="copyWalletId">FP-000000</div>
+      </div>
+      <button class="copy-btn" onclick="copyWalletId()">Copy</button>
+    </div>
+    <div style="margin:0 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;">
+      <div style="font-size:13px;color:var(--text3);margin-bottom:8px;">Share your wallet ID with friends</div>
+      <button class="btn-primary" style="width:100%;" onclick="shareWalletId()">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="3" stroke="white" stroke-width="2"/><circle cx="6" cy="12" r="3" stroke="white" stroke-width="2"/><circle cx="18" cy="19" r="3" stroke="white" stroke-width="2"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="white" stroke-width="2"/></svg>
+          Share Wallet ID
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- QR SCAN PAGE -->
+<div id="qrPage" class="inner-page">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeInner('qrPage')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">Scan QR Code</div>
+  </div>
+  <div class="scanner-view">
+    <div style="font-size:14px;color:var(--text2);">Point camera at a Fast Pay QR code</div>
+    <div class="scanner-frame">
+      <div class="scanner-corners"></div>
+      <div class="scanner-line"></div>
+    </div>
+    <div class="scanner-tip">Hold steady — the QR code will be detected automatically</div>
+    <button class="scan-demo-btn" onclick="simulateScan()">Simulate QR Scan</button>
+    <div style="font-size:12px;color:var(--text3);">Camera access requires HTTPS in production</div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS PAGE -->
+<div id="notifPage" class="inner-page">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeInner('notifPage')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">Notifications</div>
+    <button style="background:none;color:var(--p2);font-size:13px;font-weight:600;margin-left:auto;" onclick="markAllRead()">Mark all read</button>
+  </div>
+  <div class="inner-body">
+    <div id="notifList">
+      <div style="text-align:center;padding:32px;"><div class="loader-spin"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PAGE -->
+<div id="settingsPage" class="inner-page">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeInner('settingsPage')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">Settings</div>
+  </div>
+  <div class="inner-body" style="padding:16px 0;">
+    <div class="settings-section">
+      <div class="settings-label">Appearance</div>
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-icon" style="background:rgba(168,85,247,0.15);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="#A855F7" stroke-width="2"/></svg>
+          </div>
+          <div class="setting-info"><div class="name">Dark Mode</div><div class="desc">Use dark theme</div></div>
+          <div class="toggle-wrap" id="darkToggle" onclick="toggleDarkMode()"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Notifications</div>
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-icon" style="background:rgba(0,212,255,0.15);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#00D4FF" stroke-width="2"/></svg>
+          </div>
+          <div class="setting-info"><div class="name">Payment Alerts</div><div class="desc">Get notified on transactions</div></div>
+          <div class="toggle-wrap on" id="payAlertToggle" onclick="toggleNotif(this)"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-icon" style="background:rgba(0,230,118,0.15);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 012 1.18 2 2 0 014 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z" stroke="#00E676" stroke-width="2"/></svg>
+          </div>
+          <div class="setting-info"><div class="name">Cashback Alerts</div><div class="desc">Notify on cashback earned</div></div>
+          <div class="toggle-wrap on" id="cashbackToggle" onclick="toggleNotif(this)"><div class="toggle-knob"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">Security</div>
+      <div class="settings-card">
+        <div class="setting-item" onclick="showToast('Feature coming soon','info')">
+          <div class="setting-icon" style="background:rgba(255,107,53,0.15);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#FF6B35" stroke-width="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#FF6B35" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="setting-info"><div class="name">Change Password</div><div class="desc">Update your password</div></div>
+          <svg class="pmenu-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="setting-item" onclick="showToast('Biometrics coming soon','info')">
+          <div class="setting-icon" style="background:rgba(74,144,255,0.15);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#4A90FF" stroke-width="2"/></svg>
+          </div>
+          <div class="setting-info"><div class="name">Biometric Lock</div><div class="desc">Enable fingerprint / Face ID</div></div>
+          <svg class="pmenu-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-label">About</div>
+      <div class="settings-card">
+        <div class="setting-item">
+          <div class="setting-info"><div class="name">Version</div></div>
+          <div style="font-size:13px;color:var(--text3);font-family:var(--mono);">1.0.0</div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info"><div class="name">App Name</div></div>
+          <div style="font-size:13px;color:var(--text3);">FAST PAY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AMOUNT + CONFIRM SCREEN -->
+<div id="amountScreen" class="inner-page">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeInner('amountScreen')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">Enter Amount</div>
+  </div>
+  <div class="inner-body" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+    <div style="text-align:center;padding:16px 20px 8px;">
+      <div id="sendToAvatar" style="width:56px;height:56px;border-radius:50%;background:var(--grad);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;"></div>
+      <div style="font-size:16px;font-weight:700;" id="sendToName">User</div>
+      <div style="font-size:12px;color:var(--text3);" id="sendToEmail">email</div>
+    </div>
+    <div class="amount-pad">
+      <div class="amount-display">
+        <span class="currency">₹</span>
+        <span class="value" id="amtDisplay">0</span>
+      </div>
+    </div>
+    <div class="note-field">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.5;flex-shrink:0;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2"/></svg>
+      <input type="text" id="txnNote" placeholder="Add a note (optional)">
+    </div>
+    <div class="numpad" style="margin-top:16px;">
+      <button class="numpad-btn" onclick="numpadPress('1')">1</button>
+      <button class="numpad-btn" onclick="numpadPress('2')">2</button>
+      <button class="numpad-btn" onclick="numpadPress('3')">3</button>
+      <button class="numpad-btn" onclick="numpadPress('4')">4</button>
+      <button class="numpad-btn" onclick="numpadPress('5')">5</button>
+      <button class="numpad-btn" onclick="numpadPress('6')">6</button>
+      <button class="numpad-btn" onclick="numpadPress('7')">7</button>
+      <button class="numpad-btn" onclick="numpadPress('8')">8</button>
+      <button class="numpad-btn" onclick="numpadPress('9')">9</button>
+      <button class="numpad-btn" onclick="numpadPress('.')">.</button>
+      <button class="numpad-btn" onclick="numpadPress('0')">0</button>
+      <button class="numpad-btn backspace" onclick="numpadPress('back')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z" stroke="currentColor" stroke-width="2"/><line x1="18" y1="9" x2="12" y2="15" stroke="currentColor" stroke-width="2"/><line x1="12" y1="9" x2="18" y2="15" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+    </div>
+    <div style="padding:16px 20px 32px;">
+      <button class="btn-primary" style="width:100%;" onclick="openConfirm()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM TRANSACTION -->
+<div id="confirmScreen" class="confirm-screen">
+  <div class="inner-header">
+    <button class="back-btn" onclick="closeConfirm()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="inner-title">Confirm Payment</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;">
+    <div class="confirm-header">
+      <div class="confirm-avatar" id="confAvatar">U</div>
+      <div class="confirm-name" id="confName">User</div>
+      <div class="confirm-email" id="confEmail">email</div>
+    </div>
+    <div class="confirm-amount-box">
+      <div class="label">You are paying</div>
+      <div class="value" id="confAmount">₹0</div>
+    </div>
+    <div class="confirm-details">
+      <div class="confirm-row"><span class="key">To</span><span class="val" id="confToName">-</span></div>
+      <div class="confirm-row"><span class="key">From</span><span class="val" id="confFromName">-</span></div>
+      <div class="confirm-row"><span class="key">Note</span><span class="val" id="confNote">-</span></div>
+      <div class="confirm-row"><span class="key">Cashback (5%)</span><span class="val" style="color:var(--success);" id="confCashback">+ ₹0</span></div>
+      <div class="confirm-row"><span class="key">Transaction Fee</span><span class="val" style="color:var(--success);">Free</span></div>
+    </div>
+  </div>
+  <div class="confirm-footer">
+    <button class="btn-primary" id="payNowBtn" onclick="doPayment()" style="width:100%;">Pay Now</button>
+    <button class="btn-ghost" onclick="closeConfirm()" style="width:100%;text-align:center;">Cancel</button>
+  </div>
+</div>
+
+<!-- SUCCESS POPUP -->
+<div class="overlay" id="successOverlay">
+  <div class="popup">
+    <div class="popup-icon success">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#00E676" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="popup-title">Payment Sent!</div>
+    <div class="popup-msg" id="successMsg">Your payment was processed successfully.</div>
+    <div class="popup-detail">
+      <div class="popup-row"><span class="k">Amount</span><span class="v" id="sucAmt">₹0</span></div>
+      <div class="popup-row"><span class="k">To</span><span class="v" id="sucTo">-</span></div>
+      <div class="popup-row"><span class="k">Cashback</span><span class="v" style="color:var(--success);" id="sucCashback">+₹0</span></div>
+      <div class="popup-row"><span class="k">Txn ID</span><span class="v" id="sucTxnId">-</span></div>
+    </div>
+    <div class="popup-actions">
+      <button class="btn-ghost2" onclick="closeSuccessPopup()">Done</button>
+      <button class="btn-primary" onclick="closeSuccessPopup();openInner('receivePage')">Receive</button>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR POPUP -->
+<div class="overlay" id="errorOverlay">
+  <div class="popup">
+    <div class="popup-icon error">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#FF5252" stroke-width="3" stroke-linecap="round"/></svg>
+    </div>
+    <div class="popup-title">Payment Failed</div>
+    <div class="popup-msg" id="errorMsg">Something went wrong. Please try again.</div>
+    <div class="popup-actions">
+      <button class="btn-ghost2" onclick="closeErrorPopup()">Cancel</button>
+      <button class="btn-primary" onclick="closeErrorPopup()">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="editProfileModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Profile</div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="text-align:center;margin-bottom:8px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--grad);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;cursor:pointer;" id="editAvatarPreview" onclick="document.getElementById('avatarFileInput').click()">
+          <span id="editAvatarInitial">U</span>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+        <div style="font-size:12px;color:var(--p2);margin-top:8px;cursor:pointer;" onclick="document.getElementById('avatarFileInput').click()">Change photo</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Full Name</div>
+        <div class="field-wrap"><input type="text" id="editName" placeholder="Your name"></div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Email</div>
+        <div class="field-wrap"><input type="email" id="editEmail" placeholder="Email" disabled style="opacity:0.5;"></div>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="saveProfile()">Save Changes</button>
+      <button class="btn-ghost" style="width:100%;text-align:center;" onclick="closeEditProfile()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastMsg"></div>
+
+<script>
+// ===== FIREBASE INIT =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAS7-N1pCAD9gTD8ULyd7yiTASICGVxanI",
+  authDomain: "x-money-4bff0.firebaseapp.com",
+  databaseURL: "https://x-money-4bff0-default-rtdb.firebaseio.com",
+  projectId: "x-money-4bff0",
+  storageBucket: "x-money-4bff0.firebasestorage.app",
+  messagingSenderId: "28518236637",
+  appId: "1:28518236637:web:c77d3fbca6fc918825f634"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const rtdb = firebase.database();
+const storage = firebase.storage();
+
+// ===== APP STATE =====
+let currentUser = null;
+let userData = null;
+let currentSlide = 0;
+let amountStr = '0';
+let selectedRecipient = null;
+let allTransactions = [];
+let allUsers = [];
+let unsubTxns = null;
+let unsubNotifs = null;
+
+// Device fingerprint
+function getDeviceId() {
+  let id = localStorage.getItem('fp_device_id');
+  if (!id) {
+    id = 'dev_' + Math.random().toString(36).substr(2,12) + '_' + Date.now().toString(36);
+    localStorage.setItem('fp_device_id', id);
+  }
+  return id;
+}
+const DEVICE_ID = getDeviceId();
+
+// ===== LOADING SCREEN =====
+function runLoader() {
+  let pct = 0;
+  const bar = document.getElementById('loadingBar');
+  const pctEl = document.getElementById('loadingPct');
+  const interval = setInterval(() => {
+    pct += Math.random() * 12 + 3;
+    if (pct >= 100) { pct = 100; clearInterval(interval); }
+    bar.style.width = pct + '%';
+    pctEl.textContent = Math.floor(pct) + '%';
+  }, 120);
+}
+runLoader();
+
+// Dark mode init
+const savedTheme = localStorage.getItem('fp_theme') || 'dark';
+if (savedTheme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+else document.documentElement.removeAttribute('data-theme');
+setTimeout(() => {
+  const dt = document.getElementById('darkToggle');
+  if (savedTheme === 'dark' || !savedTheme) dt.classList.add('on');
+}, 100);
+
+// ===== AUTH STATE =====
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    currentUser = user;
+    await loadUserData(user.uid);
+    initApp();
+    const loadEl = document.getElementById('loadingScreen');
+    loadEl.style.opacity = '0';
+    loadEl.style.transform = 'scale(1.05)';
+    setTimeout(() => { loadEl.style.display = 'none'; showPage('mainApp'); }, 500);
+  } else {
+    const loadEl = document.getElementById('loadingScreen');
+    const hasOnboarded = localStorage.getItem('fp_onboarded');
+    loadEl.style.opacity = '0';
+    loadEl.style.transform = 'scale(1.05)';
+    setTimeout(() => {
+      loadEl.style.display = 'none';
+      showPage(hasOnboarded ? 'loginScreen' : 'onboarding');
+    }, 500);
+  }
+});
+
+async function loadUserData(uid) {
+  const snap = await db.collection('users').doc(uid).get();
+  if (snap.exists) {
+    userData = snap.data();
+  } else {
+    userData = { uid, username: currentUser.displayName || 'User', email: currentUser.email, walletBalance: 500, createdAt: Date.now(), lastLogin: Date.now(), walletId: 'FP-' + uid.substr(0,6).toUpperCase() };
+    await db.collection('users').doc(uid).set(userData);
+  }
+  // update lastLogin & device
+  await db.collection('users').doc(uid).update({ lastLogin: Date.now(), deviceId: DEVICE_ID });
+}
+
+// ===== PAGE NAV =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); });
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); }
+}
+
+function switchTab(tab, el) {
+  ['tabDashboard','tabHistory','tabProfile'].forEach(t => {
+    const el2 = document.getElementById(t);
+    if (el2) el2.style.display = 'none';
+  });
+  const tabMap = { dashboard: 'tabDashboard', history: 'tabHistory', profile: 'tabProfile' };
+  const target = document.getElementById(tabMap[tab]);
+  if (target) { target.style.display = 'block'; }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  else {
+    const ni = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+    if (ni) ni.classList.add('active');
+  }
+  if (tab === 'history') loadHistory();
+  if (tab === 'profile') loadProfileStats();
+}
+
+function openInner(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('open');
+  if (id === 'sendPage') loadAllUsers();
+  if (id === 'notifPage') loadNotifications();
+  if (id === 'receivePage') generateMyQR();
+  if (id === 'walletPage') { updateWalletPage(); loadWalletTxns(); }
+}
+
+function closeInner(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
+
+function openConfirm() {
+  const amt = parseFloat(amountStr) || 0;
+  if (amt <= 0) { showToast('Enter a valid amount', 'error'); return; }
+  if (amt > (userData?.walletBalance || 0)) { showToast('Insufficient balance', 'error'); return; }
+  const cashback = Math.floor(amt * 0.05);
+  document.getElementById('confAvatar').textContent = (selectedRecipient?.username || 'U')[0].toUpperCase();
+  document.getElementById('confName').textContent = selectedRecipient?.username || 'User';
+  document.getElementById('confEmail').textContent = selectedRecipient?.email || '';
+  document.getElementById('confAmount').textContent = '₹' + amt.toLocaleString('en-IN');
+  document.getElementById('confToName').textContent = selectedRecipient?.username || '-';
+  document.getElementById('confFromName').textContent = userData?.username || '-';
+  document.getElementById('confNote').textContent = document.getElementById('txnNote').value || 'No note';
+  document.getElementById('confCashback').textContent = '+₹' + cashback;
+  document.getElementById('confirmScreen').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmScreen').classList.remove('open');
+}
+
+// ===== AUTH =====
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !/\S+@\S+/.test(email)) { showErr('loginEmailErr'); return; }
+  if (!pass) { showErr('loginPassErr'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, pass);
+    // device check
+    const snap = await db.collection('users').doc(cred.user.uid).get();
+    if (snap.exists) {
+      const ud = snap.data();
+      if (ud.deviceId && ud.deviceId !== DEVICE_ID) {
+        document.getElementById('loginDeviceWarn').classList.add('show');
+        await auth.signOut();
+        btn.textContent = 'Sign In'; btn.disabled = false;
+        return;
+      }
+    }
+    localStorage.setItem('fp_onboarded', '1');
+  } catch(e) {
+    showToast(e.message || 'Login failed', 'error');
+    btn.textContent = 'Sign In'; btn.disabled = false;
+  }
+}
+
+async function doSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass = document.getElementById('signupPass').value;
+  if (!name) { showErr('signupNameErr'); return; }
+  if (!email || !/\S+@\S+/.test(email)) { showErr('signupEmailErr'); return; }
+  if (pass.length < 6) { showErr('signupPassErr'); return; }
+
+  // Device check - one account per device
+  const devSnap = await db.collection('devices').doc(DEVICE_ID).get();
+  if (devSnap.exists) {
+    document.getElementById('signupDeviceWarn').classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('signupBtn');
+  btn.textContent = 'Creating...'; btn.disabled = true;
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: name });
+    const uid = cred.user.uid;
+    const walletId = 'FP-' + uid.substr(0,6).toUpperCase();
+    const newUser = { uid, username: name, email, walletBalance: 500, avatar: '', createdAt: Date.now(), lastLogin: Date.now(), walletId, deviceId: DEVICE_ID };
+    await db.collection('users').doc(uid).set(newUser);
+    await db.collection('devices').doc(DEVICE_ID).set({ uid, createdAt: Date.now() });
+    // Welcome notification
+    await db.collection('notifications').add({ userId: uid, title: 'Welcome to FAST PAY!', message: 'Your account is ready. ₹500 welcome bonus has been added to your wallet.', timestamp: Date.now(), read: false, type: 'credit' });
+    // Welcome transaction
+    await db.collection('transactions').add({ transactionId: 'TXN' + Date.now(), senderId: 'system', receiverId: uid, senderName: 'FAST PAY', receiverName: name, amount: 500, status: 'completed', timestamp: Date.now(), type: 'credit', note: 'Welcome bonus' });
+    localStorage.setItem('fp_onboarded', '1');
+  } catch(e) {
+    showToast(e.message || 'Signup failed', 'error');
+    btn.textContent = 'Create Account & Get ₹500'; btn.disabled = false;
+  }
+}
+
+async function doGoogleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const cred = await auth.signInWithPopup(provider);
+    const uid = cred.user.uid;
+    const snap = await db.collection('users').doc(uid).get();
+    if (!snap.exists) {
+      // new google user — device check
+      const devSnap = await db.collection('devices').doc(DEVICE_ID).get();
+      if (devSnap.exists && devSnap.data().uid !== uid) {
+        showToast('This device already has an account', 'error');
+        await auth.signOut(); return;
+      }
+      const walletId = 'FP-' + uid.substr(0,6).toUpperCase();
+      const newUser = { uid, username: cred.user.displayName || 'User', email: cred.user.email, walletBalance: 500, avatar: cred.user.photoURL || '', createdAt: Date.now(), lastLogin: Date.now(), walletId, deviceId: DEVICE_ID };
+      await db.collection('users').doc(uid).set(newUser);
+      await db.collection('devices').doc(DEVICE_ID).set({ uid, createdAt: Date.now() });
+      await db.collection('notifications').add({ userId: uid, title: 'Welcome to FAST PAY!', message: '₹500 welcome bonus added to your wallet.', timestamp: Date.now(), read: false, type: 'credit' });
+      await db.collection('transactions').add({ transactionId: 'TXN' + Date.now(), senderId: 'system', receiverId: uid, senderName: 'FAST PAY', receiverName: cred.user.displayName || 'User', amount: 500, status: 'completed', timestamp: Date.now(), type: 'credit', note: 'Welcome bonus' });
+    } else {
+      const ud = snap.data();
+      if (ud.deviceId && ud.deviceId !== DEVICE_ID) {
+        showToast('Account linked to another device', 'error');
+        await auth.signOut(); return;
+      }
+    }
+    localStorage.setItem('fp_onboarded', '1');
+  } catch(e) {
+    showToast(e.message || 'Google sign-in failed', 'error');
+  }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  if (!email || !/\S+@\S+/.test(email)) { showErr('forgotEmailErr'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showToast('Reset link sent to your email', 'success');
+    setTimeout(() => showPage('loginScreen'), 2000);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function doLogout() {
+  if (unsubTxns) unsubTxns();
+  if (unsubNotifs) unsubNotifs();
+  await auth.signOut();
+  showPage('loginScreen');
+  currentUser = null; userData = null;
+}
+
+// ===== INIT APP =====
+function initApp() {
+  if (!userData) return;
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greetTime').textContent = greeting;
+  document.getElementById('greetName').textContent = userData.username?.split(' ')[0] || 'User';
+  document.getElementById('dashBalance').textContent = formatNum(userData.walletBalance);
+  document.getElementById('dashCardName').textContent = userData.username || 'User';
+  document.getElementById('dashCardId').textContent = userData.walletId || 'FP-000000';
+  const init = (userData.username || 'U')[0].toUpperCase();
+  document.getElementById('dashAvatarInitial').textContent = init;
+  document.getElementById('profileAvatarInitial').textContent = init;
+  document.getElementById('profileAvatarBig').style.background = 'var(--grad)';
+  document.getElementById('profileName').textContent = userData.username || 'User';
+  document.getElementById('profileEmail').textContent = userData.email || '';
+  document.getElementById('profileWalletId').textContent = userData.walletId || 'FP-000000';
+  buildMiniChart();
+  listenTransactions();
+  listenNotifications();
+  updateWalletPage();
+  switchTab('dashboard');
+}
+
+function formatNum(n) {
+  return parseFloat(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function buildMiniChart() {
+  const chart = document.getElementById('miniChart');
+  const heights = [20, 35, 28, 50, 42, 60, 38, 55, 45, 65];
+  chart.innerHTML = heights.map((h, i) => `<div class="chart-bar ${i===heights.length-1?'active':''}" style="height:${h}%;" title="Week ${i+1}"></div>`).join('');
+}
+
+// ===== REALTIME LISTEN =====
+function listenTransactions() {
+  if (!currentUser) return;
+  unsubTxns = db.collection('transactions')
+    .where('receiverId', '==', currentUser.uid)
+    .orderBy('timestamp', 'desc')
+    .limit(50)
+    .onSnapshot(() => { loadDashTxns(); updateBalance(); });
+  db.collection('transactions')
+    .where('senderId', '==', currentUser.uid)
+    .orderBy('timestamp', 'desc')
+    .limit(50)
+    .onSnapshot(() => { loadDashTxns(); updateBalance(); });
+}
+
+function listenNotifications() {
+  if (!currentUser) return;
+  unsubNotifs = db.collection('notifications')
+    .where('userId', '==', currentUser.uid)
+    .where('read', '==', false)
+    .onSnapshot(snap => {
+      const badge = document.getElementById('notifBadge');
+      if (snap.size > 0) badge.style.display = 'block';
+      else badge.style.display = 'none';
+    });
+}
+
+async function updateBalance() {
+  if (!currentUser) return;
+  const snap = await db.collection('users').doc(currentUser.uid).get();
+  if (snap.exists) {
+    userData = snap.data();
+    document.getElementById('dashBalance').textContent = formatNum(userData.walletBalance);
+    updateWalletPage();
+    updateStats();
+  }
+}
+
+function updateStats() {
+  const txns = allTransactions;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  let sent = 0, recv = 0;
+  txns.forEach(t => {
+    if (t.timestamp >= monthStart) {
+      if (t.senderId === currentUser.uid) sent += t.amount;
+      if (t.receiverId === currentUser.uid && t.senderId !== 'system') recv += t.amount;
+    }
+  });
+  document.getElementById('statSent').textContent = '₹' + formatNum(sent);
+  document.getElementById('statRecv').textContent = '₹' + formatNum(recv);
+}
+
+async function loadDashTxns() {
+  if (!currentUser) return;
+  const [sentSnap, recvSnap] = await Promise.all([
+    db.collection('transactions').where('senderId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(20).get(),
+    db.collection('transactions').where('receiverId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(20).get()
+  ]);
+  const txns = [];
+  sentSnap.forEach(d => txns.push({ id: d.id, ...d.data() }));
+  recvSnap.forEach(d => { if (!txns.find(t => t.id === d.id)) txns.push({ id: d.id, ...d.data() }); });
+  txns.sort((a, b) => b.timestamp - a.timestamp);
+  allTransactions = txns;
+  renderDashTxns(txns.slice(0, 5));
+  updateStats();
+}
+
+function renderDashTxns(txns) {
+  const list = document.getElementById('dashTxnList');
+  if (!txns.length) { list.innerHTML = '<div class="empty-state"><p>No transactions yet</p></div>'; return; }
+  list.innerHTML = txns.map(t => txnCard(t)).join('');
+}
+
+function txnCard(t) {
+  const isCredit = t.receiverId === currentUser.uid;
+  const isSystem = t.senderId === 'system';
+  const type = isCredit ? (isSystem ? 'credit' : 'credit') : 'debit';
+  const name = isCredit ? (t.senderName || 'FAST PAY') : (t.receiverName || 'User');
+  const sign = isCredit ? '+' : '-';
+  const color = isCredit ? 'credit' : 'debit';
+  const initial = (name[0] || 'F').toUpperCase();
+  const date = new Date(t.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return `<div class="txn-card" onclick="showTxnDetail('${t.id}')">
+    <div class="txn-avatar ${color}">${initial}</div>
+    <div class="txn-info">
+      <div class="txn-name">${name}</div>
+      <div class="txn-date">${date}${t.note ? ' · ' + t.note : ''}</div>
+    </div>
+    <div class="txn-amount ${color}">${sign}₹${formatNum(t.amount)}</div>
+  </div>`;
+}
+
+function showTxnDetail(id) {
+  const t = allTransactions.find(x => x.id === id);
+  if (!t) return;
+  const isCredit = t.receiverId === currentUser.uid;
+  const name = isCredit ? (t.senderName || 'FAST PAY') : (t.receiverName || 'User');
+  const sign = isCredit ? '+' : '-';
+  const statusColor = t.status === 'completed' ? 'var(--success)' : 'var(--error)';
+  showToast(`${sign}₹${formatNum(t.amount)} · ${name} · ${t.status}`, isCredit ? 'success' : 'info');
+}
+
+// ===== LOAD ALL USERS =====
+async function loadAllUsers() {
+  if (!currentUser) return;
+  const snap = await db.collection('users').get();
+  allUsers = [];
+  snap.forEach(d => { if (d.id !== currentUser.uid) allUsers.push({ id: d.id, ...d.data() }); });
+  renderUserList(allUsers);
+}
+
+function renderUserList(users) {
+  const list = document.getElementById('userList');
+  if (!users.length) { list.innerHTML = '<div class="empty-state"><p>No users found</p></div>'; return; }
+  list.innerHTML = users.map(u => `
+    <div class="contact-card" onclick="selectRecipient('${u.id}')">
+      <div class="contact-avatar">${(u.username || 'U')[0].toUpperCase()}</div>
+      <div class="contact-info">
+        <div class="contact-name">${u.username}</div>
+        <div class="contact-email">${u.email} · ${u.walletId || ''}</div>
+      </div>
+      <svg class="contact-arrow" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+  `).join('');
+}
+
+function searchUsers(q) {
+  const filtered = q ? allUsers.filter(u => u.username?.toLowerCase().includes(q.toLowerCase()) || u.email?.toLowerCase().includes(q.toLowerCase()) || u.walletId?.toLowerCase().includes(q.toLowerCase())) : allUsers;
+  renderUserList(filtered);
+}
+
+function selectRecipient(uid) {
+  selectedRecipient = allUsers.find(u => u.id === uid);
+  if (!selectedRecipient) return;
+  amountStr = '0';
+  document.getElementById('amtDisplay').textContent = '0';
+  document.getElementById('txnNote').value = '';
+  document.getElementById('sendToName').textContent = selectedRecipient.username;
+  document.getElementById('sendToEmail').textContent = selectedRecipient.email;
+  document.getElementById('sendToAvatar').textContent = (selectedRecipient.username || 'U')[0].toUpperCase();
+  openInner('amountScreen');
+}
+
+// ===== NUMPAD =====
+function numpadPress(k) {
+  if (k === 'back') {
+    amountStr = amountStr.length > 1 ? amountStr.slice(0, -1) : '0';
+  } else if (k === '.') {
+    if (!amountStr.includes('.')) amountStr += '.';
+  } else {
+    if (amountStr === '0') amountStr = k;
+    else if (amountStr.length < 10) amountStr += k;
+  }
+  document.getElementById('amtDisplay').textContent = amountStr;
+}
+
+// ===== PAYMENT =====
+async function doPayment() {
+  if (!selectedRecipient || !currentUser || !userData) return;
+  const amount = parseFloat(amountStr) || 0;
+  if (amount <= 0) { showToast('Invalid amount', 'error'); return; }
+  if (amount > userData.walletBalance) { closeConfirm(); showErrorPopup('Insufficient wallet balance.'); return; }
+  const btn = document.getElementById('payNowBtn');
+  btn.textContent = 'Processing...'; btn.disabled = true;
+  const cashback = Math.floor(amount * 0.05);
+  const txnId = 'TXN' + Date.now();
+  const note = document.getElementById('txnNote').value || '';
+  try {
+    const batch = db.batch();
+    // Deduct sender
+    batch.update(db.collection('users').doc(currentUser.uid), { walletBalance: firebase.firestore.FieldValue.increment(-amount + cashback) });
+    // Credit receiver
+    batch.update(db.collection('users').doc(selectedRecipient.id), { walletBalance: firebase.firestore.FieldValue.increment(amount) });
+    await batch.commit();
+    // Record transaction
+    await db.collection('transactions').add({ transactionId: txnId, senderId: currentUser.uid, receiverId: selectedRecipient.id, senderName: userData.username, receiverName: selectedRecipient.username, amount, cashback, status: 'completed', timestamp: Date.now(), type: 'debit', note });
+    // Notifications
+    await db.collection('notifications').add({ userId: selectedRecipient.id, title: 'Money Received!', message: `You received ₹${formatNum(amount)} from ${userData.username}.`, timestamp: Date.now(), read: false, type: 'credit' });
+    await db.collection('notifications').add({ userId: currentUser.uid, title: 'Payment Sent', message: `₹${formatNum(amount)} sent to ${selectedRecipient.username}. Cashback: ₹${cashback}.`, timestamp: Date.now(), read: false, type: 'debit' });
+    // Cashback transaction
+    if (cashback > 0) {
+      await db.collection('transactions').add({ transactionId: 'CB' + Date.now(), senderId: 'system', receiverId: currentUser.uid, senderName: 'Cashback', receiverName: userData.username, amount: cashback, status: 'completed', timestamp: Date.now(), type: 'cashback', note: '5% cashback' });
+    }
+    closeConfirm();
+    await updateBalance();
+    document.getElementById('sucAmt').textContent = '₹' + formatNum(amount);
+    document.getElementById('sucTo').textContent = selectedRecipient.username;
+    document.getElementById('sucCashback').textContent = '+₹' + cashback;
+    document.getElementById('sucTxnId').textContent = txnId;
+    document.getElementById('successMsg').textContent = `Payment of ₹${formatNum(amount)} sent to ${selectedRecipient.username} successfully!`;
+    closeInner('amountScreen');
+    closeInner('sendPage');
+    showSuccessPopup();
+  } catch(e) {
+    closeConfirm();
+    showErrorPopup(e.message || 'Payment failed');
+  }
+  btn.textContent = 'Pay Now'; btn.disabled = false;
+}
+
+// ===== HISTORY =====
+async function loadHistory() {
+  if (!currentUser) return;
+  const list = document.getElementById('historyList');
+  list.innerHTML = '<div style="text-align:center;padding:32px;"><div class="loader-spin"></div></div>';
+  const [sentSnap, recvSnap] = await Promise.all([
+    db.collection('transactions').where('senderId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(50).get(),
+    db.collection('transactions').where('receiverId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(50).get()
+  ]);
+  const txns = [];
+  sentSnap.forEach(d => txns.push({ id: d.id, ...d.data() }));
+  recvSnap.forEach(d => { if (!txns.find(t => t.id === d.id)) txns.push({ id: d.id, ...d.data() }); });
+  txns.sort((a, b) => b.timestamp - a.timestamp);
+  allTransactions = txns;
+  list.innerHTML = txns.length ? txns.map(t => txnCard(t)).join('') : '<div class="empty-state"><p>No transactions yet</p></div>';
+}
+
+function filterTxns(type, el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const list = document.getElementById('historyList');
+  let filtered = allTransactions;
+  if (type === 'credit') filtered = allTransactions.filter(t => t.receiverId === currentUser.uid && t.senderId !== 'system' && t.type !== 'cashback');
+  else if (type === 'debit') filtered = allTransactions.filter(t => t.senderId === currentUser.uid);
+  else if (type === 'cashback') filtered = allTransactions.filter(t => t.type === 'cashback');
+  list.innerHTML = filtered.length ? filtered.map(t => txnCard(t)).join('') : '<div class="empty-state"><p>No transactions</p></div>';
+}
+
+// ===== WALLET PAGE =====
+function updateWalletPage() {
+  if (!userData) return;
+  document.getElementById('walletBalance').textContent = formatNum(userData.walletBalance);
+  document.getElementById('walletCardName').textContent = userData.username || 'User';
+  document.getElementById('walletCardId').textContent = userData.walletId || 'FP-000000';
+}
+
+async function loadWalletTxns() {
+  if (!currentUser) return;
+  const list = document.getElementById('walletTxnList');
+  list.innerHTML = '<div style="text-align:center;padding:24px;"><div class="loader-spin"></div></div>';
+  const [sentSnap, recvSnap] = await Promise.all([
+    db.collection('transactions').where('senderId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(20).get(),
+    db.collection('transactions').where('receiverId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(20).get()
+  ]);
+  const txns = [];
+  sentSnap.forEach(d => txns.push({ id: d.id, ...d.data() }));
+  recvSnap.forEach(d => { if (!txns.find(t => t.id === d.id)) txns.push({ id: d.id, ...d.data() }); });
+  txns.sort((a, b) => b.timestamp - a.timestamp);
+  list.innerHTML = txns.length ? txns.map(t => txnCard(t)).join('') : '<div class="empty-state"><p>No transactions yet</p></div>';
+}
+
+// ===== NOTIFICATIONS =====
+async function loadNotifications() {
+  if (!currentUser) return;
+  const snap = await db.collection('notifications').where('userId', '==', currentUser.uid).orderBy('timestamp', 'desc').limit(30).get();
+  const notifs = [];
+  snap.forEach(d => notifs.push({ id: d.id, ...d.data() }));
+  const list = document.getElementById('notifList');
+  if (!notifs.length) { list.innerHTML = '<div class="empty-state"><p>No notifications</p></div>'; return; }
+  list.innerHTML = notifs.map(n => `
+    <div class="notif-card ${n.read ? '' : 'unread'}" onclick="markRead('${n.id}',this)">
+      <div class="notif-top">
+        <div class="notif-icon ${n.type === 'credit' || n.type === 'cashback' ? 'credit' : 'pay'}">
+          ${n.type === 'credit' || n.type === 'cashback' ?
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 4v16M5 11l7-7 7 7" stroke="#00E676" stroke-width="2" stroke-linecap="round"/></svg>' :
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#6C3BFF" stroke-width="2"/></svg>'}
+        </div>
+        <div class="notif-text">
+          <div class="title">${n.title}</div>
+          <div class="msg">${n.message}</div>
+        </div>
+      </div>
+      <div class="notif-time">${new Date(n.timestamp).toLocaleString('en-IN')}</div>
+    </div>
+  `).join('');
+}
+
+async function markRead(id, el) {
+  await db.collection('notifications').doc(id).update({ read: true });
+  el.classList.remove('unread');
+}
+
+async function markAllRead() {
+  if (!currentUser) return;
+  const snap = await db.collection('notifications').where('userId', '==', currentUser.uid).where('read', '==', false).get();
+  const batch = db.batch();
+  snap.forEach(d => batch.update(d.ref, { read: true }));
+  await batch.commit();
+  loadNotifications();
+  showToast('All notifications marked as read', 'success');
+}
+
+// ===== QR =====
+function generateMyQR() {
+  if (!userData) return;
+  const walletId = userData.walletId || 'FP-000000';
+  document.getElementById('receiveWalletId').textContent = walletId;
+  document.getElementById('copyWalletId').textContent = walletId;
+  drawQR(document.getElementById('myQR'), walletId);
+}
+
+function drawQR(canvas, data) {
+  const size = 180;
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+  const cellSize = 6;
+  const margin = 12;
+  const qrSize = Math.floor((size - 2 * margin) / cellSize);
+  const matrix = generateQRMatrix(data, qrSize);
+  for (let r = 0; r < qrSize; r++) {
+    for (let c = 0; c < qrSize; c++) {
+      if (matrix[r][c]) {
+        const grad = ctx.createLinearGradient(margin + c * cellSize, margin + r * cellSize, margin + (c+1) * cellSize, margin + (r+1) * cellSize);
+        grad.addColorStop(0, '#6C3BFF'); grad.addColorStop(1, '#00D4FF');
+        ctx.fillStyle = grad;
+        ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize - 1, cellSize - 1);
+      }
+    }
+  }
+  // corners
+  ctx.fillStyle = '#6C3BFF';
+  [[0,0],[qrSize-7,0],[0,qrSize-7]].forEach(([r,c]) => {
+    ctx.fillStyle = '#6C3BFF';
+    ctx.fillRect(margin+c*cellSize, margin+r*cellSize, 7*cellSize, 7*cellSize);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(margin+c*cellSize+cellSize, margin+r*cellSize+cellSize, 5*cellSize, 5*cellSize);
+    ctx.fillStyle = '#6C3BFF';
+    ctx.fillRect(margin+c*cellSize+2*cellSize, margin+r*cellSize+2*cellSize, 3*cellSize, 3*cellSize);
+  });
+}
+
+function generateQRMatrix(data, size) {
+  // Deterministic pseudo-QR from data hash
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) hash = ((hash << 5) - hash + data.charCodeAt(i)) | 0;
+  const m = [];
+  for (let r = 0; r < size; r++) {
+    m[r] = [];
+    for (let c = 0; c < size; c++) {
+      const seed = hash ^ (r * 73856093) ^ (c * 19349663);
+      m[r][c] = ((seed * 1664525 + 1013904223) & 0x7fffffff) % 3 !== 0;
+    }
+  }
+  return m;
+}
+
+function copyWalletId() {
+  const id = userData?.walletId || 'FP-000000';
+  navigator.clipboard.writeText(id).then(() => showToast('Wallet ID copied!', 'success')).catch(() => showToast('Copy manually: ' + id, 'info'));
+}
+
+function shareWalletId() {
+  const id = userData?.walletId || 'FP-000000';
+  if (navigator.share) {
+    navigator.share({ title: 'My FAST PAY Wallet', text: `Send money to my FAST PAY wallet: ${id}` });
+  } else {
+    copyWalletId();
+  }
+}
+
+function simulateScan() {
+  if (!allUsers.length) { showToast('No users available to simulate', 'info'); return; }
+  const target = allUsers[Math.floor(Math.random() * allUsers.length)];
+  showToast('QR scanned: ' + target.username, 'success');
+  closeInner('qrPage');
+  setTimeout(() => { selectRecipient(target.id); openInner('sendPage'); }, 400);
+}
+
+// ===== PROFILE =====
+async function loadProfileStats() {
+  if (!currentUser) return;
+  const [sentSnap, recvSnap] = await Promise.all([
+    db.collection('transactions').where('senderId', '==', currentUser.uid).get(),
+    db.collection('transactions').where('receiverId', '==', currentUser.uid).get()
+  ]);
+  let sentAmt = 0, recvAmt = 0;
+  sentSnap.forEach(d => sentAmt += d.data().amount || 0);
+  recvSnap.forEach(d => recvAmt += d.data().amount || 0);
+  document.getElementById('pstatTxn').textContent = sentSnap.size + recvSnap.size;
+  document.getElementById('pstatSent').textContent = '₹' + formatNum(sentAmt);
+  document.getElementById('pstatRecv').textContent = '₹' + formatNum(recvAmt);
+}
+
+function openEditProfile() {
+  document.getElementById('editName').value = userData?.username || '';
+  document.getElementById('editEmail').value = userData?.email || '';
+  document.getElementById('editAvatarInitial').textContent = (userData?.username || 'U')[0].toUpperCase();
+  document.getElementById('editProfileModal').classList.add('show');
+}
+
+function closeEditProfile() {
+  document.getElementById('editProfileModal').classList.remove('show');
+}
+
+async function saveProfile() {
+  const name = document.getElementById('editName').value.trim();
+  if (!name) { showToast('Name required', 'error'); return; }
+  try {
+    await db.collection('users').doc(currentUser.uid).update({ username: name });
+    await currentUser.updateProfile({ displayName: name });
+    userData.username = name;
+    document.getElementById('greetName').textContent = name.split(' ')[0];
+    document.getElementById('profileName').textContent = name;
+    document.getElementById('dashCardName').textContent = name;
+    document.getElementById('dashAvatarInitial').textContent = name[0].toUpperCase();
+    document.getElementById('profileAvatarInitial').textContent = name[0].toUpperCase();
+    closeEditProfile();
+    showToast('Profile updated!', 'success');
+  } catch(e) { showToast('Update failed', 'error'); }
+}
+
+function handleAvatarUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('editAvatarPreview').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    showToast('Avatar updated (local preview)', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== SETTINGS =====
+function toggleDarkMode() {
+  const el = document.getElementById('darkToggle');
+  const isDark = el.classList.contains('on');
+  if (isDark) {
+    el.classList.remove('on');
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('fp_theme', 'light');
+  } else {
+    el.classList.add('on');
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('fp_theme', 'dark');
+  }
+}
+
+function toggleNotif(el) {
+  el.classList.toggle('on');
+}
+
+// ===== POPUPS =====
+function showSuccessPopup() {
+  document.getElementById('successOverlay').classList.add('show');
+}
+function closeSuccessPopup() {
+  document.getElementById('successOverlay').classList.remove('show');
+  loadDashTxns();
+}
+function showErrorPopup(msg) {
+  document.getElementById('errorMsg').textContent = msg || 'Something went wrong.';
+  document.getElementById('errorOverlay').classList.add('show');
+}
+function closeErrorPopup() {
+  document.getElementById('errorOverlay').classList.remove('show');
+}
+
+// ===== TOAST =====
+let toastTimer;
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toastMsg');
+  let icon = '';
+  if (type === 'success') icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#00E676" stroke-width="2.5"/></svg>';
+  else if (type === 'error') icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#FF5252" stroke-width="2.5"/></svg>';
+  else icon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#4A90FF" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="#4A90FF" stroke-width="2"/></svg>';
+  t.innerHTML = icon + msg;
+  t.className = `toast show ${type}-toast`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3500);
+}
+
+// ===== ONBOARDING =====
+function obNext() {
+  if (currentSlide < 2) obGoTo(currentSlide + 1);
+  else { localStorage.setItem('fp_onboarded','1'); showPage('signupScreen'); }
+}
+
+function obGoTo(i) {
+  currentSlide = i;
+  document.querySelectorAll('.onboard-slide').forEach((s, idx) => {
+    s.style.transform = `translateX(${(idx - i) * 100}%)`;
+  });
+  document.querySelectorAll('.onboard-dot').forEach((d, idx) => {
+    d.classList.toggle('active', idx === i);
+  });
+  document.getElementById('obPrev').style.display = i > 0 ? 'block' : 'none';
+  document.getElementById('obNext').textContent = i === 2 ? 'Get Started' : 'Next';
+}
+
+// ===== HELPERS =====
+function showErr(id) {
+  document.getElementById(id).classList.add('show');
+  setTimeout(() => document.getElementById(id).classList.remove('show'), 3000);
+}
+
+function togglePass(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// Ripple effect
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-primary,.numpad-btn');
+  if (!btn) return;
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height) * 2;
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px;`;
+  btn.style.position = 'relative'; btn.style.overflow = 'hidden';
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+});
+
+// Close overlays on backdrop click
+document.getElementById('successOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSuccessPopup(); });
+document.getElementById('errorOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeErrorPopup(); });
+document.getElementById('editProfileModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditProfile(); });
+
+// Auto-animate balance counter
+function animateCounter(el, target) {
+  const start = parseFloat(el.textContent.replace(/,/g, '')) || 0;
+  const end = parseFloat(target);
+  const dur = 800;
+  const startTime = performance.now();
+  function update(now) {
+    const progress = Math.min((now - startTime) / dur, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = formatNum(start + (end - start) * ease);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// ===== SERVICE WORKER (offline) skip for simplicity =====
+console.log('FAST PAY initialized');
+</script>
+</body>
+</html>
